@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WellMusic — TikTok авторизация</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { max-width: 640px; margin: 0 auto; padding: 40px 24px 60px;
+         background: #171033; color: #f3eefc;
+         font-family: Georgia, 'Times New Roman', serif; line-height: 1.7; }
+  h1 { font-weight: normal; font-size: 1.5rem; margin-bottom: 20px; }
+  .ok { color: #7ce8a9; }
+  .err { color: #ff8fa3; }
+  code, .code {
+    font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .95rem;
+  }
+  .code {
+    display: block; background: #241a45; border: 1px solid #4a3a7a;
+    border-radius: 10px; padding: 14px; margin: 14px 0; word-break: break-all;
+  }
+  button {
+    font: inherit; padding: 10px 22px; border-radius: 999px; cursor: pointer;
+    background: #ff4d8d; color: #fff; border: none;
+  }
+  button:active { opacity: .8; }
+  .hint { color: #9d8bc4; font-size: .9rem; margin-top: 24px; }
+</style>
+</head>
+<body>
+  <h1 id="title">TikTok авторизация</h1>
+  <div id="content">Ожидание кода…</div>
+  <p class="hint">Это служебная страница приложения WellMusic: сюда TikTok
+  возвращает код после разрешения доступа. Код действует несколько минут и
+  бесполезен без секретного ключа приложения.</p>
+<script>
+  const p = new URLSearchParams(location.search);
+  const code = p.get("code");
+  const error = p.get("error");
+  const title = document.getElementById("title");
+  const box = document.getElementById("content");
+  if (code) {
+    title.innerHTML = '<span class="ok">✅ Доступ разрешён</span>';
+    box.innerHTML =
+      '<p>Скопируйте код и вставьте его в команду <code>wellmusic tiktok-auth</code> в терминале:</p>' +
+      '<span class="code" id="code"></span>' +
+      '<button onclick="copyCode()">Скопировать код</button>';
+    document.getElementById("code").textContent = code;
+  } else if (error) {
+    title.innerHTML = '<span class="err">❌ Ошибка авторизации</span>';
+    box.innerHTML = '<span class="code"></span>';
+    box.querySelector(".code").textContent =
+      error + (p.get("error_description") ? ": " + p.get("error_description") : "");
+  }
+  function copyCode() {
+    navigator.clipboard.writeText(code).then(() => {
+      document.querySelector("button").textContent = "Скопировано ✓";
+    });
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WellMusic · Lofi Beats</title>
+<style>
+  :root { color-scheme: dark; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(180deg, #171033 0%, #2b1650 55%, #4a1d5e 100%);
+    color: #f3eefc; font-family: Georgia, 'Times New Roman', serif; padding: 24px;
+  }
+  .card { max-width: 560px; text-align: center; }
+  .sun {
+    width: 120px; height: 120px; margin: 0 auto 28px; border-radius: 50%;
+    background: linear-gradient(180deg, #ffd166 0%, #ff7b54 45%, #ff4d8d 100%);
+    position: relative; overflow: hidden; box-shadow: 0 0 60px rgba(255, 105, 120, .45);
+  }
+  .sun::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 8%;
+    height: 44%;
+    background: repeating-linear-gradient(180deg, transparent 0 8px, #2b1650 8px 13px);
+  }
+  h1 { font-size: 2rem; font-weight: normal; letter-spacing: .04em; margin-bottom: 10px; }
+  p.tag { color: #cdbdf0; font-size: 1.05rem; margin-bottom: 34px; }
+  .links { display: flex; flex-direction: column; gap: 12px; align-items: center; }
+  .links a {
+    display: block; width: 100%; max-width: 320px; padding: 13px 20px;
+    border: 1px solid rgba(243, 238, 252, .35); border-radius: 999px;
+    color: #f3eefc; text-decoration: none; font-size: 1rem;
+    transition: background .2s, border-color .2s;
+  }
+  .links a:hover { background: rgba(243, 238, 252, .1); border-color: rgba(243, 238, 252, .7); }
+  footer { margin-top: 44px; font-size: .82rem; color: #9d8bc4; line-height: 1.7; }
+  footer a { color: #cdbdf0; }
+</style>
+</head>
+<body>
+  <main class="card">
+    <div class="sun" aria-hidden="true"></div>
+    <h1>WellMusic · Lofi Beats</h1>
+    <p class="tag">Lofi beats to relax, study and sleep 🌙<br>AI-generated music, human-curated.</p>
+    <nav class="links">
+      <a href="https://www.tiktok.com/@wellmusic.lofi">TikTok — @wellmusic.lofi</a>
+      <a href="https://www.youtube.com/@wellmusic_lofi">YouTube — WellMusic · Lofi Beats</a>
+    </nav>
+    <footer>
+      New tracks and long mixes every week.<br>
+      <a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms of Service</a>
+    </footer>
+  </main>
+</body>
+</html>
