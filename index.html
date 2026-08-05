@@ -27,12 +27,16 @@
   p.tag { color: #cdbdf0; font-size: 1.05rem; margin-bottom: 34px; }
   .links { display: flex; flex-direction: column; gap: 12px; align-items: center; }
   .links a {
-    display: block; width: 100%; max-width: 320px; padding: 13px 20px;
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+    width: 100%; max-width: 320px; padding: 13px 20px;
     border: 1px solid rgba(243, 238, 252, .35); border-radius: 999px;
     color: #f3eefc; text-decoration: none; font-size: 1rem;
     transition: background .2s, border-color .2s;
   }
   .links a:hover { background: rgba(243, 238, 252, .1); border-color: rgba(243, 238, 252, .7); }
+  .links a svg { width: 24px; height: 24px; flex: none; }
+  /* Фирменное неоновое «раздвоение» логотипа TikTok в палитре сайта */
+  .ic-tiktok { color: #f3eefc; filter: drop-shadow(1.4px 0 0 #ff4d8d) drop-shadow(-1.4px 0 0 #25f4ee); }
   footer { margin-top: 44px; font-size: .82rem; color: #9d8bc4; line-height: 1.7; }
   footer a { color: #cdbdf0; }
 </style>
@@ -43,8 +47,19 @@
     <h1>WellMusic · Lofi Beats</h1>
     <p class="tag">Lofi beats to relax, study and sleep 🌙<br>AI-generated music, human-curated.</p>
     <nav class="links">
-      <a href="https://www.tiktok.com/@wellmusic.lofi">TikTok — @wellmusic.lofi</a>
-      <a href="https://www.youtube.com/@wellmusic_lofi">YouTube — WellMusic · Lofi Beats</a>
+      <a href="https://www.tiktok.com/@wellmusic.lofi" aria-label="TikTok — @wellmusic.lofi">
+        <svg class="ic-tiktok" viewBox="0 0 48 48" fill="currentColor" aria-hidden="true">
+          <path d="M33.5 6c.5 4.2 2.9 6.8 7 7.1v5.1c-2.4.2-4.5-.6-7-2v10c0 12.7-13.9 16.7-19.4 7.6-3.6-6-1.2-16.2 10.3-16.6v5.4c-.9.1-1.9.4-2.8.7-2.6 1-4 2.6-3.6 5.5.8 5.6 11 7.2 10.1-3.6V6h5.4z"/>
+        </svg>
+        <span>@wellmusic.lofi</span>
+      </a>
+      <a href="https://www.youtube.com/@wellmusic_lofi" aria-label="YouTube — WellMusic · Lofi Beats">
+        <svg viewBox="0 0 48 34" aria-hidden="true">
+          <path fill="#ff0033" d="M46.5 5.3a6 6 0 0 0-4.2-4.2C38.5 0 24 0 24 0S9.5 0 5.7 1.1A6 6 0 0 0 1.5 5.3C.4 9.1.4 17 .4 17s0 7.9 1.1 11.7a6 6 0 0 0 4.2 4.2C9.5 34 24 34 24 34s14.5 0 18.3-1.1a6 6 0 0 0 4.2-4.2C47.6 24.9 47.6 17 47.6 17s0-7.9-1.1-11.7z"/>
+          <path fill="#fff" d="M19.2 24.2 31.4 17l-12.2-7.2z"/>
+        </svg>
+        <span>WellMusic · Lofi Beats</span>
+      </a>
     </nav>
     <footer>
       New tracks and long mixes every week.<br>
