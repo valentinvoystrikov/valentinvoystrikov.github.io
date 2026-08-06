@@ -18,14 +18,13 @@ import urllib.request
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-CHANNEL_ID = "UC0ZfP-xuh9qyUlNOUKJhLEA"
-# Один и тот же RSS доступен двумя путями: по каналу и по его плейлисту
-# загрузок (UU…). На датацентровые IP YouTube иногда отвечает 404 по
-# одному пути, но отдаёт другой — пробуем оба.
-FEEDS = [
-    f"https://www.youtube.com/feeds/videos.xml?channel_id={CHANNEL_ID}",
-    f"https://www.youtube.com/feeds/videos.xml?playlist_id=UU{CHANNEL_ID[2:]}",
-]
+# ID канала добываем САМИ по хэндлу — попытка взять его из адреса
+# YouTube Studio закончилась несуществующим UC0ZfP…: RSS отвечал честным
+# 404 даже из обычного браузера. Хэндл — то, что видно в шапке канала,
+# он проверяемый и стабильный.
+HANDLE = "@wellmusic_lofi"
+CHANNEL_URL = f"https://www.youtube.com/{HANDLE}"
+CHANNEL_ID_RE = re.compile(r'"(?:channelId|externalId)":"(UC[A-Za-z0-9_-]{22})"')
 MIX_MARKER = "mix vol."
 WANT = 2
 PAGE = Path(__file__).resolve().parents[2] / "index.html"
@@ -59,8 +58,13 @@ def fetch(url: str) -> bytes | None:
             print(f"попытка {n}/{ATTEMPTS} не удалась — {last}")
             if n < ATTEMPTS:
                 time.sleep(PAUSE)
-    print(f"источник {url.split('?')[1]} недоступен ({last})")
+    print(f"источник {url.rsplit('/', 1)[-1]} недоступен ({last})")
     return None
+
+
+def resolve_channel_id(html: bytes) -> str | None:
+    m = CHANNEL_ID_RE.search(html.decode("utf-8", "replace"))
+    return m.group(1) if m else None
 
 
 def latest_mix_ids(xml: bytes) -> list[str]:
@@ -77,8 +81,19 @@ def latest_mix_ids(xml: bytes) -> list[str]:
 
 
 def main() -> int:
+    html = fetch(CHANNEL_URL)
+    cid = resolve_channel_id(html) if html else None
+    if not cid:
+        print(f"::warning::не удалось определить ID канала по {HANDLE} — "
+              "миксы не обновлены")
+        return 0
+    print(f"канал {HANDLE} → {cid}")
+    # Один и тот же RSS доступен двумя путями: по каналу и по плейлисту
+    # загрузок (UU…). На датацентровые IP YouTube иногда отвечает 404 по
+    # одному, но отдаёт другой — пробуем оба.
     xml = None
-    for feed in FEEDS:
+    for feed in (f"https://www.youtube.com/feeds/videos.xml?channel_id={cid}",
+                 f"https://www.youtube.com/feeds/videos.xml?playlist_id=UU{cid[2:]}"):
         xml = fetch(feed)
         if xml is not None:
             break
