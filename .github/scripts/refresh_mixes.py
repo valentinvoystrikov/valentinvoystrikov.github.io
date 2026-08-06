@@ -12,6 +12,8 @@
 
 import re
 import sys
+import time
+import urllib.error
 import urllib.request
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -25,6 +27,36 @@ LINE = re.compile(r"^(?P<pre>\s*MIXES:\s*)\[[^\]]*\](?P<post>,\s*/\* auto \*/\s*
                   re.M)
 VIDEO_ID = re.compile(r"^[A-Za-z0-9_-]{11}$")
 NS = {"a": "http://www.w3.org/2005/Atom", "yt": "http://www.youtube.com/xml/schemas/2015"}
+
+# YouTube отвечает 500 на запросы, представившиеся как Python-urllib, —
+# из дата-центров такие он отшивает. Прикидываемся обычным браузером.
+HEADERS = {
+    "User-Agent": ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+                   "(KHTML, like Gecko) Chrome/126.0 Safari/537.36"),
+    "Accept": "application/atom+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.9",
+}
+ATTEMPTS = 3
+PAUSE = 5.0
+
+
+def fetch(url: str) -> bytes | None:
+    """Лента с повторами: 500 у YouTube бывает и разовым."""
+    last = ""
+    for n in range(1, ATTEMPTS + 1):
+        try:
+            req = urllib.request.Request(url, headers=HEADERS)
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                return resp.read()
+        except Exception as e:
+            last = f"{type(e).__name__}: {e}"
+            print(f"попытка {n}/{ATTEMPTS} не удалась — {last}")
+            if n < ATTEMPTS:
+                time.sleep(PAUSE)
+    # ::warning:: подсвечивает прогон в интерфейсе: зелёная галочка на
+    # ничего не сделавшем запуске вводит в заблуждение
+    print(f"::warning::лента канала недоступна ({last}), миксы не обновлены")
+    return None
 
 
 def latest_mix_ids(xml: bytes) -> list[str]:
@@ -41,16 +73,14 @@ def latest_mix_ids(xml: bytes) -> list[str]:
 
 
 def main() -> int:
-    try:
-        with urllib.request.urlopen(FEED, timeout=30) as resp:
-            xml = resp.read()
-    except Exception as e:
-        print(f"лента недоступна ({e}) — страницу не трогаем")
+    xml = fetch(FEED)
+    if xml is None:
         return 0
 
     ids = latest_mix_ids(xml)
     if not ids:
-        print("миксов в ленте не нашлось — страницу не трогаем")
+        print("::warning::в ленте нет роликов с «Mix Vol.» в названии — "
+              "миксы не обновлены")
         return 0
 
     page = PAGE.read_text(encoding="utf-8")
