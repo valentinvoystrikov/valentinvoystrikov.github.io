@@ -23,8 +23,12 @@ from pathlib import Path
 # 404 даже из обычного браузера. Хэндл — то, что видно в шапке канала,
 # он проверяемый и стабильный.
 HANDLE = "@wellmusic_lofi"
-CHANNEL_URL = f"https://www.youtube.com/{HANDLE}"
+# Качаем сразу вкладку «Видео»: в ней есть и channelId (для RSS), и сам
+# список роликов (запасной парсинг, когда RSS молчит)
+CHANNEL_URL = f"https://www.youtube.com/{HANDLE}/videos"
 CHANNEL_ID_RE = re.compile(r'"(?:channelId|externalId)":"(UC[A-Za-z0-9_-]{22})"')
+VIDEO_CHUNK_RE = re.compile(r'"videoRenderer":\{"videoId":"([A-Za-z0-9_-]{11})"')
+TITLE_RE = re.compile(r'"title":\{"runs":\[\{"text":"((?:[^"\\]|\\.)*)"')
 MIX_MARKER = "mix vol."
 WANT = 2
 PAGE = Path(__file__).resolve().parents[2] / "index.html"
@@ -67,6 +71,24 @@ def resolve_channel_id(html: bytes) -> str | None:
     return m.group(1) if m else None
 
 
+def scrape_mix_ids(html: bytes) -> list[str]:
+    """Миксы прямо со страницы «Видео» — когда RSS-лента отдаёт 404.
+    Проверено вживую: для этого канала (создан 2026-08) фид не работает
+    ни с раннеров, ни из обычного браузера, а страница отдаётся всем.
+    Порядок роликов на вкладке — по дате, свежие первыми."""
+    text = html.decode("utf-8", "replace")
+    out = []
+    for m in VIDEO_CHUNK_RE.finditer(text):
+        vid = m.group(1)
+        t = TITLE_RE.search(text, m.end(), m.end() + 2000)
+        title = t.group(1).encode().decode("unicode_escape") if t else ""
+        if MIX_MARKER in title.lower() and vid not in out:
+            out.append(vid)
+        if len(out) == WANT:
+            break
+    return out
+
+
 def latest_mix_ids(xml: bytes) -> list[str]:
     root = ET.fromstring(xml)
     out = []
@@ -97,13 +119,12 @@ def main() -> int:
         xml = fetch(feed)
         if xml is not None:
             break
-    if xml is None:
-        # ::warning:: подсвечивает прогон в интерфейсе Actions: зелёная
-        # галочка на ничего не сделавшем запуске вводит в заблуждение
-        print("::warning::оба источника ленты недоступны, миксы не обновлены")
-        return 0
 
-    ids = latest_mix_ids(xml)
+    if xml is not None:
+        ids = latest_mix_ids(xml)
+    else:
+        print("RSS молчит — берём миксы со страницы «Видео»")
+        ids = scrape_mix_ids(html)
     if not ids:
         print("::warning::в ленте нет роликов с «Mix Vol.» в названии — "
               "миксы не обновлены")
