@@ -75,6 +75,13 @@
   .player:hover { border-color: rgba(243, 238, 252, .7); }
   .player img { width: 100%; height: 100%; object-fit: cover; display: block;
                 opacity: .82; }
+  /* Плейлист загрузок: конкретного превью нет и быть не может — свежий
+     ролик меняется. Рисуем свою обложку в стиле страницы. */
+  .player.latest {
+    background:
+      radial-gradient(60% 70% at 50% 30%, rgba(255,123,84,.35), transparent 70%),
+      linear-gradient(180deg, #241546 0%, #3a1b57 100%);
+  }
   .player iframe { width: 100%; height: 100%; border: 0; display: block; }
   .player .play { position: absolute; inset: 0; display: flex;
                   align-items: center; justify-content: center;
@@ -112,7 +119,7 @@
     <section>
       <h2>Latest mix</h2>
       <button class="player" id="player" aria-label="Play the latest mix">
-        <img id="thumb" alt="" loading="lazy" decoding="async">
+        <img id="thumb" alt="" loading="lazy" decoding="async" hidden>
         <span class="play" aria-hidden="true"><span>▶</span></span>
       </button>
       <p class="cap">Hour-long mixes with timestamped tracklists —
@@ -153,7 +160,7 @@
 const CFG = {
   YT_HANDLE:  "@wellmusic_lofi",
   TT_HANDLE:  "@wellmusic.lofi",
-  CHANNEL_ID: "",
+  CHANNEL_ID: "UC0ZfP-xuh9qyUlNOUKJhLEA",
   FEATURED:   "i9NLA87kmtc",
   EMAIL:      "hello@well-music.com",
 };
@@ -170,13 +177,21 @@ mail.href = "mailto:" + CFG.EMAIL;
 mail.textContent = CFG.EMAIL;
 document.getElementById("year").textContent = new Date().getFullYear();
 
-/* maxres есть не у каждого ролика — тихо откатываемся на hqdefault */
+/* С CHANNEL_ID плеер открывает плейлист загрузок, и превью конкретного
+   ролика было бы враньём: клик показал бы уже другое видео. Рисуем свою
+   обложку. Без CHANNEL_ID превью честное — берём кадр из FEATURED
+   (maxres есть не у всех, тихо откатываемся на hqdefault). */
 const thumb = document.getElementById("thumb");
-thumb.src = `https://i.ytimg.com/vi/${CFG.FEATURED}/maxresdefault.jpg`;
-thumb.onerror = () => {
-  thumb.onerror = null;
-  thumb.src = `https://i.ytimg.com/vi/${CFG.FEATURED}/hqdefault.jpg`;
-};
+if (CFG.CHANNEL_ID) {
+  document.getElementById("player").classList.add("latest");
+} else {
+  thumb.hidden = false;
+  thumb.src = `https://i.ytimg.com/vi/${CFG.FEATURED}/maxresdefault.jpg`;
+  thumb.onerror = () => {
+    thumb.onerror = null;
+    thumb.src = `https://i.ytimg.com/vi/${CFG.FEATURED}/hqdefault.jpg`;
+  };
+}
 
 document.getElementById("player").addEventListener("click", function () {
   const src = CFG.CHANNEL_ID
