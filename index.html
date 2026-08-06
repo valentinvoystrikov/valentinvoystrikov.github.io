@@ -75,19 +75,15 @@
   .player:hover { border-color: rgba(243, 238, 252, .7); }
   .player img { width: 100%; height: 100%; object-fit: cover; display: block;
                 opacity: .82; }
-  /* Плейлист загрузок: конкретного превью нет и быть не может — свежий
-     ролик меняется. Рисуем свою обложку в стиле страницы. */
-  .player.latest {
-    background:
-      radial-gradient(60% 70% at 50% 30%, rgba(255,123,84,.35), transparent 70%),
-      linear-gradient(180deg, #241546 0%, #3a1b57 100%);
-  }
+  /* Мобильный — один под другим, от 620px — два в ряд */
+  .mixes { display: grid; gap: 14px; }
+  @media (min-width: 620px) { .mixes { grid-template-columns: 1fr 1fr; } }
   .player iframe { width: 100%; height: 100%; border: 0; display: block; }
   .player .play { position: absolute; inset: 0; display: flex;
                   align-items: center; justify-content: center;
                   pointer-events: none; }
   .player .play span {
-    width: 64px; height: 64px; border-radius: 50%; display: flex;
+    width: 54px; height: 54px; border-radius: 50%; display: flex;
     align-items: center; justify-content: center;
     font-size: 1.4rem; color: #2b1650; padding-left: 4px;
     background: linear-gradient(180deg, #ffd166 0%, #ff7b54 45%, #ff4d8d 100%);
@@ -117,11 +113,8 @@
     </nav>
 
     <section>
-      <h2>Latest mix</h2>
-      <button class="player" id="player" aria-label="Play the latest mix">
-        <img id="thumb" alt="" loading="lazy" decoding="async" hidden>
-        <span class="play" aria-hidden="true"><span>▶</span></span>
-      </button>
+      <h2>Latest mixes</h2>
+      <div class="mixes" id="mixes"></div>
       <p class="cap">Hour-long mixes with timestamped tracklists —
         <a id="all-mixes" href="#" rel="noopener">all of them on YouTube</a>.</p>
     </section>
@@ -151,9 +144,10 @@
 
 <script>
 /* Всё изменяемое — здесь.
-   FEATURED — id ролика из ссылки youtu.be/XXXX.
-   CHANNEL_ID (UC…) не обязателен, но с ним плеер сам показывает СВЕЖИЙ
-   микс: берётся плейлист загрузок канала. Где взять — docs/site.md.
+   MIXES — id двух свежих миксов. Строку переписывает робот
+   .github/workflows/refresh-mixes.yml (раз в 6 часов читает RSS канала
+   и берёт последние ролики с «Mix Vol.» в названии), поэтому маркер
+   /* auto */ в конце строки трогать нельзя.
    privacy.html / terms.html лежат рядом в этом же репозитории —
    ссылки относительные. На них ссылается приложение TikTok, файлы не
    переименовывать. */
@@ -161,7 +155,7 @@ const CFG = {
   YT_HANDLE:  "@wellmusic_lofi",
   TT_HANDLE:  "@wellmusic.lofi",
   CHANNEL_ID: "UC0ZfP-xuh9qyUlNOUKJhLEA",
-  FEATURED:   "i9NLA87kmtc",
+  MIXES: ["i9NLA87kmtc"], /* auto */
   EMAIL:      "hello@well-music.com",
 };
 
@@ -177,31 +171,35 @@ mail.href = "mailto:" + CFG.EMAIL;
 mail.textContent = CFG.EMAIL;
 document.getElementById("year").textContent = new Date().getFullYear();
 
-/* С CHANNEL_ID плеер открывает плейлист загрузок, и превью конкретного
-   ролика было бы враньём: клик показал бы уже другое видео. Рисуем свою
-   обложку. Без CHANNEL_ID превью честное — берём кадр из FEATURED
-   (maxres есть не у всех, тихо откатываемся на hqdefault). */
-const thumb = document.getElementById("thumb");
-if (CFG.CHANNEL_ID) {
-  document.getElementById("player").classList.add("latest");
-} else {
-  thumb.hidden = false;
-  thumb.src = `https://i.ytimg.com/vi/${CFG.FEATURED}/maxresdefault.jpg`;
-  thumb.onerror = () => {
-    thumb.onerror = null;
-    thumb.src = `https://i.ytimg.com/vi/${CFG.FEATURED}/hqdefault.jpg`;
+/* Карточка микса: превью — настоящий кадр ролика с серверов YouTube
+   (maxres есть не у всех, тихо откатываемся на hqdefault). Плеер
+   грузится только по клику: страница открывается мгновенно, и скрипты
+   YouTube не подтягиваются к тем, кто просто заглянул. */
+function mixCard(id) {
+  const box = document.createElement("button");
+  box.className = "player";
+  box.setAttribute("aria-label", "Play mix");
+  box.innerHTML =
+    `<img alt="" loading="lazy" decoding="async" ` +
+    `src="https://i.ytimg.com/vi/${id}/maxresdefault.jpg">` +
+    `<span class="play" aria-hidden="true"><span>▶</span></span>`;
+  const img = box.querySelector("img");
+  img.onerror = () => {
+    img.onerror = null;
+    img.src = `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
   };
+  box.addEventListener("click", () => {
+    box.outerHTML =
+      `<div class="player"><iframe title="WellMusic mix" ` +
+      `src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1" ` +
+      `allow="accelerometer; autoplay; encrypted-media; picture-in-picture" ` +
+      `allowfullscreen loading="lazy"></iframe></div>`;
+  }, { once: true });
+  return box;
 }
 
-document.getElementById("player").addEventListener("click", function () {
-  const src = CFG.CHANNEL_ID
-    ? `https://www.youtube-nocookie.com/embed/videoseries?list=UU${CFG.CHANNEL_ID.slice(2)}&autoplay=1`
-    : `https://www.youtube-nocookie.com/embed/${CFG.FEATURED}?autoplay=1`;
-  this.outerHTML =
-    `<div class="player"><iframe src="${src}" title="WellMusic mix" ` +
-    `allow="accelerometer; autoplay; encrypted-media; picture-in-picture" ` +
-    `allowfullscreen loading="lazy"></iframe></div>`;
-}, { once: true });
+const grid = document.getElementById("mixes");
+CFG.MIXES.slice(0, 2).forEach((id) => grid.appendChild(mixCard(id)));
 </script>
 </body>
 </html>
