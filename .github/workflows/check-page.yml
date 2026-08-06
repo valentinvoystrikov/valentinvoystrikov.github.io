@@ -1,0 +1,40 @@
+name: Проверка страницы
+
+# Весь сайт — один файл, и скрипт в нём инлайновый: браузер молча
+# проглатывает ошибку синтаксиса, страница выглядит целой, но ни одна
+# кнопка не работает. Так уже случалось (вложенный блочный комментарий
+# оборвал скрипт), поэтому проверяем на каждый пуш.
+on:
+  push:
+    branches: [main]
+    paths: ["index.html", ".github/workflows/check-page.yml"]
+  pull_request:
+    paths: ["index.html"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Вырезать инлайновый скрипт
+        run: |
+          python3 - <<'PY'
+          import pathlib
+          s = pathlib.Path("index.html").read_text(encoding="utf-8")
+          js = s[s.index("<script>") + len("<script>"):s.rindex("</script>")]
+          pathlib.Path("inline.js").write_text(js, encoding="utf-8")
+          print(f"{len(js.splitlines())} строк JS")
+          PY
+
+      - name: Проверить синтаксис
+        run: node --check inline.js
+
+      - name: Проверить, что якорь робота на месте
+        run: |
+          grep -qE '^\s*MIXES: \[.*\], /\* auto \*/$' index.html \
+            || { echo "::error::строка MIXES потеряла маркер /* auto */ — робот перестанет её обновлять"; exit 1; }
