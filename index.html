@@ -4,52 +4,189 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>WellMusic · Lofi Beats</title>
+<meta name="description" content="WellMusic: lofi beats to relax, study and sleep. AI-generated music, human-curated. New tracks and long mixes every week.">
+<link rel="canonical" href="https://well-music.com/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="WellMusic · Lofi Beats">
+<meta property="og:description" content="Lofi beats to relax, study and sleep. AI-generated music, human-curated.">
+<meta property="og:url" content="https://well-music.com/">
+<meta name="theme-color" content="#171033">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='13' fill='%23ff7b54'/></svg>">
 <style>
-  :root { color-scheme: dark; }
+  /* Палитра и типографика — как на valentinvoystrikov.github.io:
+     ночной фиолет, ретро-солнце, Georgia, кнопки-пилюли. */
+  :root {
+    color-scheme: dark;
+    --fg: #f3eefc; --dim: #cdbdf0; --mute: #9d8bc4;
+    --deep: #2b1650; --line: rgba(243, 238, 252, .35);
+    --hot: #ff4d8d;
+  }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    min-height: 100vh; display: flex; align-items: center; justify-content: center;
-    background: linear-gradient(180deg, #171033 0%, #2b1650 55%, #4a1d5e 100%);
-    color: #f3eefc; font-family: Georgia, 'Times New Roman', serif; padding: 24px;
+    background: linear-gradient(180deg, #171033 0%, #2b1650 55%, #4a1d5e 100%)
+                no-repeat fixed;
+    background-color: #4a1d5e;   /* если страница длиннее градиента */
+    color: var(--fg); font-family: Georgia, 'Times New Roman', serif;
+    line-height: 1.7; padding: 24px;
   }
-  .card { max-width: 560px; text-align: center; }
+  .card { max-width: 560px; margin: 0 auto; text-align: center; }
+
+  /* Ретро-солнце: круг с горячим градиентом, низ разрезан полосами */
   .sun {
-    width: 120px; height: 120px; margin: 0 auto 28px; border-radius: 50%;
+    width: 120px; height: 120px; margin: 56px auto 28px; border-radius: 50%;
     background: linear-gradient(180deg, #ffd166 0%, #ff7b54 45%, #ff4d8d 100%);
-    position: relative; overflow: hidden; box-shadow: 0 0 60px rgba(255, 105, 120, .45);
+    position: relative; overflow: hidden;
+    box-shadow: 0 0 60px rgba(255, 105, 120, .45);
   }
   .sun::after {
-    content: ""; position: absolute; left: 0; right: 0; bottom: 8%;
-    height: 44%;
-    background: repeating-linear-gradient(180deg, transparent 0 8px, #2b1650 8px 13px);
+    content: ""; position: absolute; left: 0; right: 0; bottom: 8%; height: 44%;
+    background: repeating-linear-gradient(180deg, transparent 0 8px,
+                                          var(--deep) 8px 13px);
   }
-  h1 { font-size: 2rem; font-weight: normal; letter-spacing: .04em; margin-bottom: 10px; }
-  p.tag { color: #cdbdf0; font-size: 1.05rem; margin-bottom: 34px; }
-  .links { display: flex; flex-direction: column; gap: 12px; align-items: center; }
-  .links a {
+
+  h1 { font-size: 2rem; font-weight: normal; letter-spacing: .04em;
+       margin-bottom: 10px; }
+  p.tag { color: var(--dim); font-size: 1.05rem; }
+
+  .links { display: flex; flex-direction: column; gap: 12px;
+           align-items: center; margin-top: 34px; }
+  .links a, .mail {
     display: block; width: 100%; max-width: 320px; padding: 13px 20px;
-    border: 1px solid rgba(243, 238, 252, .35); border-radius: 999px;
-    color: #f3eefc; text-decoration: none; font-size: 1rem;
+    border: 1px solid var(--line); border-radius: 999px;
+    color: var(--fg); text-decoration: none; font-size: 1rem;
     transition: background .2s, border-color .2s;
   }
-  .links a:hover { background: rgba(243, 238, 252, .1); border-color: rgba(243, 238, 252, .7); }
-  footer { margin-top: 44px; font-size: .82rem; color: #9d8bc4; line-height: 1.7; }
-  footer a { color: #cdbdf0; }
+  .links a:hover, .mail:hover {
+    background: rgba(243, 238, 252, .1); border-color: rgba(243, 238, 252, .7);
+  }
+
+  section { margin-top: 56px; }
+  h2 { font-size: .82rem; font-weight: normal; letter-spacing: .18em;
+       text-transform: uppercase; color: var(--mute); margin-bottom: 18px; }
+
+  /* Плеер грузится по клику: страница открывается мгновенно, а скрипты
+     YouTube не подгружаются тем, кто просто заглянул на визитку */
+  .player {
+    position: relative; display: block; width: 100%; padding: 0;
+    aspect-ratio: 16/9; overflow: hidden; cursor: pointer;
+    border: 1px solid var(--line); border-radius: 16px;
+    background: var(--deep); transition: border-color .2s;
+  }
+  .player:hover { border-color: rgba(243, 238, 252, .7); }
+  .player img { width: 100%; height: 100%; object-fit: cover; display: block;
+                opacity: .82; }
+  .player iframe { width: 100%; height: 100%; border: 0; display: block; }
+  .player .play { position: absolute; inset: 0; display: flex;
+                  align-items: center; justify-content: center;
+                  pointer-events: none; }
+  .player .play span {
+    width: 64px; height: 64px; border-radius: 50%; display: flex;
+    align-items: center; justify-content: center;
+    font-size: 1.4rem; color: #2b1650; padding-left: 4px;
+    background: linear-gradient(180deg, #ffd166 0%, #ff7b54 45%, #ff4d8d 100%);
+    box-shadow: 0 0 40px rgba(255, 105, 120, .5);
+  }
+  .cap { margin-top: 14px; color: var(--mute); font-size: .9rem; }
+  .cap a, footer a { color: var(--dim); }
+  .about p { color: var(--dim); text-align: left; }
+  .about p + p { margin-top: 14px; }
+  .mail { margin: 0 auto; }
+
+  footer { margin-top: 56px; padding-bottom: 40px; font-size: .82rem;
+           color: var(--mute); line-height: 1.7; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
 <body>
   <main class="card">
     <div class="sun" aria-hidden="true"></div>
     <h1>WellMusic · Lofi Beats</h1>
-    <p class="tag">Lofi beats to relax, study and sleep 🌙<br>AI-generated music, human-curated.</p>
+    <p class="tag">Lofi beats to relax, study and sleep 🌙<br>
+      AI-generated music, human-curated.</p>
+
     <nav class="links">
-      <a href="https://www.tiktok.com/@wellmusic.lofi">TikTok — @wellmusic.lofi</a>
-      <a href="https://www.youtube.com/@wellmusic_lofi">YouTube — WellMusic · Lofi Beats</a>
+      <a id="tt-link" href="#" rel="noopener">TikTok — @wellmusic.lofi</a>
+      <a id="yt-link" href="#" rel="noopener">YouTube — WellMusic · Lofi Beats</a>
     </nav>
+
+    <section>
+      <h2>Latest mix</h2>
+      <button class="player" id="player" aria-label="Play the latest mix">
+        <img id="thumb" alt="" loading="lazy" decoding="async">
+        <span class="play" aria-hidden="true"><span>▶</span></span>
+      </button>
+      <p class="cap">Hour-long mixes with timestamped tracklists —
+        <a id="all-mixes" href="#" rel="noopener">all of them on YouTube</a>.</p>
+    </section>
+
+    <section class="about">
+      <h2>About</h2>
+      <p>WellMusic is a small lofi label run by one person and a pile of
+        machines. Tracks are generated with AI, then listened to and picked
+        by hand — only what actually sounds good makes it out.</p>
+      <p>Every video gets its own artwork: a still scene brought to life with
+        slow camera breathing, drifting light and weather. New tracks land as
+        Shorts, longer sets come out as mixes you can leave running.</p>
+    </section>
+
+    <section>
+      <h2>Get in touch</h2>
+      <a class="mail" id="mail" href="#">hello@well-music.com</a>
+    </section>
+
     <footer>
       New tracks and long mixes every week.<br>
-      <a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms of Service</a>
+      <a href="privacy.html">Privacy Policy</a> ·
+      <a href="terms.html">Terms of Service</a><br>
+      © <span id="year"></span> WellMusic
     </footer>
   </main>
+
+<script>
+/* Всё изменяемое — здесь.
+   FEATURED — id ролика из ссылки youtu.be/XXXX.
+   CHANNEL_ID (UC…) не обязателен, но с ним плеер сам показывает СВЕЖИЙ
+   микс: берётся плейлист загрузок канала. Где взять — docs/site.md.
+   privacy.html / terms.html лежат рядом в этом же репозитории —
+   ссылки относительные. На них ссылается приложение TikTok, файлы не
+   переименовывать. */
+const CFG = {
+  YT_HANDLE:  "@wellmusic_lofi",
+  TT_HANDLE:  "@wellmusic.lofi",
+  CHANNEL_ID: "",
+  FEATURED:   "i9NLA87kmtc",
+  EMAIL:      "hello@well-music.com",
+};
+
+const chan = CFG.CHANNEL_ID
+  ? `https://www.youtube.com/channel/${CFG.CHANNEL_ID}`
+  : `https://www.youtube.com/${CFG.YT_HANDLE}`;
+document.getElementById("yt-link").href = chan;
+document.getElementById("all-mixes").href = chan + "/videos";
+document.getElementById("tt-link").href =
+  `https://www.tiktok.com/${CFG.TT_HANDLE}`;
+const mail = document.getElementById("mail");
+mail.href = "mailto:" + CFG.EMAIL;
+mail.textContent = CFG.EMAIL;
+document.getElementById("year").textContent = new Date().getFullYear();
+
+/* maxres есть не у каждого ролика — тихо откатываемся на hqdefault */
+const thumb = document.getElementById("thumb");
+thumb.src = `https://i.ytimg.com/vi/${CFG.FEATURED}/maxresdefault.jpg`;
+thumb.onerror = () => {
+  thumb.onerror = null;
+  thumb.src = `https://i.ytimg.com/vi/${CFG.FEATURED}/hqdefault.jpg`;
+};
+
+document.getElementById("player").addEventListener("click", function () {
+  const src = CFG.CHANNEL_ID
+    ? `https://www.youtube-nocookie.com/embed/videoseries?list=UU${CFG.CHANNEL_ID.slice(2)}&autoplay=1`
+    : `https://www.youtube-nocookie.com/embed/${CFG.FEATURED}?autoplay=1`;
+  this.outerHTML =
+    `<div class="player"><iframe src="${src}" title="WellMusic mix" ` +
+    `allow="accelerometer; autoplay; encrypted-media; picture-in-picture" ` +
+    `allowfullscreen loading="lazy"></iframe></div>`;
+}, { once: true });
+</script>
 </body>
 </html>
