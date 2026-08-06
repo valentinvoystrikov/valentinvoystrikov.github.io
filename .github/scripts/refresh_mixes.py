@@ -19,7 +19,13 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 CHANNEL_ID = "UC0ZfP-xuh9qyUlNOUKJhLEA"
-FEED = f"https://www.youtube.com/feeds/videos.xml?channel_id={CHANNEL_ID}"
+# Один и тот же RSS доступен двумя путями: по каналу и по его плейлисту
+# загрузок (UU…). На датацентровые IP YouTube иногда отвечает 404 по
+# одному пути, но отдаёт другой — пробуем оба.
+FEEDS = [
+    f"https://www.youtube.com/feeds/videos.xml?channel_id={CHANNEL_ID}",
+    f"https://www.youtube.com/feeds/videos.xml?playlist_id=UU{CHANNEL_ID[2:]}",
+]
 MIX_MARKER = "mix vol."
 WANT = 2
 PAGE = Path(__file__).resolve().parents[2] / "index.html"
@@ -53,9 +59,7 @@ def fetch(url: str) -> bytes | None:
             print(f"попытка {n}/{ATTEMPTS} не удалась — {last}")
             if n < ATTEMPTS:
                 time.sleep(PAUSE)
-    # ::warning:: подсвечивает прогон в интерфейсе: зелёная галочка на
-    # ничего не сделавшем запуске вводит в заблуждение
-    print(f"::warning::лента канала недоступна ({last}), миксы не обновлены")
+    print(f"источник {url.split('?')[1]} недоступен ({last})")
     return None
 
 
@@ -73,8 +77,15 @@ def latest_mix_ids(xml: bytes) -> list[str]:
 
 
 def main() -> int:
-    xml = fetch(FEED)
+    xml = None
+    for feed in FEEDS:
+        xml = fetch(feed)
+        if xml is not None:
+            break
     if xml is None:
+        # ::warning:: подсвечивает прогон в интерфейсе Actions: зелёная
+        # галочка на ничего не сделавшем запуске вводит в заблуждение
+        print("::warning::оба источника ленты недоступны, миксы не обновлены")
         return 0
 
     ids = latest_mix_ids(xml)
