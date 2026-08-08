@@ -10,46 +10,88 @@
 <meta property="og:title" content="WellMusic · Lofi Beats">
 <meta property="og:description" content="Lofi beats to relax, study and sleep. AI-generated music, human-curated.">
 <meta property="og:url" content="https://well-music.com/">
-<meta name="theme-color" content="#171033">
+<meta name="theme-color" content="#16102c">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='13' fill='%23ff7b54'/></svg>">
 <style>
-  /* Палитра и типографика — как на valentinvoystrikov.github.io:
-     ночной фиолет, ретро-солнце, Georgia, кнопки-пилюли. */
+  /* Ночной фиолет, ретро-солнце, Georgia, кнопки-пилюли.
+     Правка 2026-08-08 по разбору дизайнера: фон был линейным градиентом,
+     который книзу СВЕТЛЕЛ до #4a1d5e, и длинные абзацы лежали на самой
+     яркой плоской его части. Теперь наоборот: светлее вверху, где солнце,
+     глубже внизу, где читают. */
   :root {
     color-scheme: dark;
-    --fg: #f3eefc; --dim: #cdbdf0; --mute: #9d8bc4;
-    --deep: #2b1650; --line: rgba(243, 238, 252, .35);
+    --fg: #f3eefc; --dim: #b3a4d4; --mute: #9584bd;
+    --deep: #2b1650;         /* поверхность карточек плеера, НЕ фон страницы */
+    --sun-slice: #16102c;    /* = верхняя ПЛОСКАЯ площадка фона, см. .sun::after */
+    --line: rgba(243, 238, 252, .40);
     --hot: #ff4d8d;
+    --block: clamp(64px, 16vw, 96px);   /* воздух между блоками */
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
+  button { font: inherit; color: inherit; background: none; }
+  html { background-color: #0f0a1e; }   /* и цвет оттяжки при overscroll */
   body {
-    background: linear-gradient(180deg, #171033 0%, #2b1650 55%, #4a1d5e 100%)
-                no-repeat fixed;
-    background-color: #4a1d5e;   /* если страница длиннее градиента */
     color: var(--fg); font-family: Georgia, 'Times New Roman', serif;
-    line-height: 1.7; padding: 24px;
+    line-height: 1.72;
+    padding-inline: max(20px, env(safe-area-inset-left));
   }
-  .card { max-width: 560px; margin: 0 auto; text-align: center; }
+  /* Глубина отдельным фиксированным слоем, а не background-attachment: fixed —
+     тот на iOS считается от БОЛЬШОГО вьюпорта и дёргается, пока схлопывается
+     адресная строка. inset по вертикали с запасом, чтобы в этот момент не
+     появлялась щель. */
+  body::before {
+    content: ""; position: fixed; inset: -12vh 0; z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(150% 80% at 50% 100%, rgba(58, 30, 96, .55) 0%,
+                      rgba(58, 30, 96, .22) 38%, rgba(58, 30, 96, 0) 68%),
+      radial-gradient(90% 34% at 50% 6%, rgba(255, 123, 84, .07) 0%,
+                      rgba(255, 77, 141, .03) 45%, rgba(255, 77, 141, 0) 72%),
+      linear-gradient(180deg, #16102c 0px, #16102c 260px, #140e27 520px,
+                      #110b21 800px, #0f0a1e 1100px);
+  }
+  /* Шум против полос: перепад #16102c→#0f0a1e растянут на ~840px, это
+     полтора десятка ступеней квантования — на OLED в темноте они видны
+     лентами. Тайл рисуется один раз, запросов не делает. */
+  body::after {
+    content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    opacity: .05;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 160px 160px;
+  }
+  .card { max-width: 520px; margin: 0 auto; text-align: center; }
 
   /* Ретро-солнце: круг с горячим градиентом, низ разрезан полосами */
   .sun {
-    width: 120px; height: 120px; margin: 56px auto 28px; border-radius: 50%;
+    width: 120px; height: 120px; border-radius: 50%;
+    margin: clamp(44px, 11vw, 64px) auto 30px;
     background: linear-gradient(180deg, #ffd166 0%, #ff7b54 45%, #ff4d8d 100%);
     position: relative; overflow: hidden;
-    box-shadow: 0 0 60px rgba(255, 105, 120, .45);
+    box-shadow: 0 0 70px 6px rgba(255, 110, 130, .32),
+                0 0 170px 30px rgba(255, 77, 141, .13);
   }
+  /* Полосы притворяются фоном, просвечивающим сквозь солнце, поэтому их цвет
+     обязан совпадать с фоном на этой высоте. Ради этого верх градиента —
+     плоская площадка в пикселях: на телефоне любой высоты солнце попадает
+     в неё целиком, а с процентными стопами оттенок уплывал бы. */
   .sun::after {
     content: ""; position: absolute; left: 0; right: 0; bottom: 8%; height: 44%;
-    background: repeating-linear-gradient(180deg, transparent 0 8px,
-                                          var(--deep) 8px 13px);
+    background: repeating-linear-gradient(180deg, rgba(0, 0, 0, 0) 0 8px,
+                                          var(--sun-slice) 8px 13px);
   }
 
-  h1 { font-size: 2rem; font-weight: normal; letter-spacing: .04em;
-       margin-bottom: 10px; }
-  p.tag { color: var(--dim); font-size: 1.05rem; }
+  h1 { margin-bottom: 14px; font-weight: normal; }
+  h1 .brand { display: block; font-size: clamp(2rem, 8.5vw, 2.5rem);
+              letter-spacing: .04em; }
+  /* Вторая строка осмысленная, а не случайный перенос: раньше «Beats»
+     срывался вниз один. Неразрывный пробел держит пару вместе. */
+  h1 .kicker { display: block; margin-top: 12px; font-size: .78rem;
+               letter-spacing: .34em; text-transform: uppercase;
+               color: var(--mute); }
+  p.tag { color: var(--dim); font-size: 1.02rem; text-wrap: balance; }
 
-  .links { display: flex; flex-direction: column; gap: 12px;
-           align-items: center; margin-top: 34px; }
+  .links { display: flex; flex-direction: column; gap: 14px;
+           align-items: center; margin-top: 40px; }
   .links a, .mail {
     display: block; width: 100%; max-width: 320px; padding: 13px 20px;
     border: 1px solid var(--line); border-radius: 999px;
@@ -59,10 +101,24 @@
   .links a:hover, .mail:hover {
     background: rgba(243, 238, 252, .1); border-color: rgba(243, 238, 252, .7);
   }
+  a:focus-visible, .mail:focus-visible, .player:focus-visible {
+    outline: 2px solid var(--hot); outline-offset: 3px;
+  }
 
-  section { margin-top: 56px; }
-  h2 { font-size: .82rem; font-weight: normal; letter-spacing: .18em;
-       text-transform: uppercase; color: var(--mute); margin-bottom: 18px; }
+  section { margin-top: var(--block); position: relative; }
+  /* Разделитель — мягкое свечение внутри уже существующего отступа: высоты
+     не добавляет, «коробок» не рисует. Первую секцию пропускаем — над ней
+     и так стоят кнопки-пилюли. */
+  section + section::before, footer::before {
+    content: ""; position: absolute; left: 50%; transform: translateX(-50%);
+    top: calc(var(--block) / -2);
+    width: min(240px, 62%); height: 3px;
+    background: radial-gradient(closest-side, rgba(205, 189, 240, .26),
+                                rgba(205, 189, 240, 0));
+  }
+  footer::before { top: calc(var(--block) * -0.625); }
+  h2 { font-size: .82rem; font-weight: normal; letter-spacing: .2em;
+       text-transform: uppercase; color: var(--mute); margin-bottom: 20px; }
 
   /* Плеер грузится по клику: страница открывается мгновенно, а скрипты
      YouTube не подгружаются тем, кто просто заглянул на визитку */
@@ -73,30 +129,32 @@
     background: var(--deep); transition: border-color .2s;
   }
   .player:hover { border-color: rgba(243, 238, 252, .7); }
-  .player img { width: 100%; height: 100%; object-fit: cover; display: block;
-                opacity: .82; }
   /* Обложки серий: у плейлиста нет кадра-превью, рисуем свои в палитре
-     страницы — сонная (луна, синева) и позитивная (тёплое солнце) */
+     страницы — сонная (луна, синева) и позитивная (тёплое солнце).
+     rgba(...,0) вместо transparent: голое transparent — это прозрачный
+     ЧЁРНЫЙ, и на переходе местами вылезает грязная полоса. */
   .player .series {
     position: absolute; inset: auto 0 12px 0; text-align: center;
-    font-size: 1.05rem; color: var(--fg); text-shadow: 0 2px 8px #171033;
+    font-size: 1.05rem; color: var(--fg); text-shadow: 0 2px 8px #0b0716;
     pointer-events: none;
   }
   .player.sleepy {
     background:
-      radial-gradient(38% 52% at 72% 28%, rgba(205, 189, 240, .5), transparent 70%),
+      radial-gradient(38% 52% at 72% 28%, rgba(205, 189, 240, .5),
+                      rgba(205, 189, 240, 0) 70%),
       linear-gradient(180deg, #171033 0%, #232055 60%, #2b3a6e 100%);
   }
   .player.positive {
     background:
-      radial-gradient(46% 62% at 50% 34%, rgba(255, 209, 102, .55), transparent 72%),
-      linear-gradient(180deg, #2b1650 0%, #58306b 60%, #8a4a63 100%);
+      radial-gradient(46% 62% at 50% 34%, rgba(255, 209, 102, .55),
+                      rgba(255, 209, 102, 0) 72%),
+      linear-gradient(180deg, #2b1650 0%, #58306b 60%, #7a4159 100%);
   }
   /* Мобильный — один под другим, на широком — рядом. auto-fit важен:
      пока микс один, его карточка занимает всю ширину, а не левую
      половину с пустотой справа. */
   .mixes {
-    display: grid; gap: 14px;
+    display: grid; gap: 16px;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   }
   .player iframe { width: 100%; height: 100%; border: 0; display: block; }
@@ -106,38 +164,60 @@
   .player .play span {
     width: 54px; height: 54px; border-radius: 50%; display: flex;
     align-items: center; justify-content: center;
-    font-size: 1.4rem; color: #2b1650; padding-left: 4px;
     background: linear-gradient(180deg, #ffd166 0%, #ff7b54 45%, #ff4d8d 100%);
     box-shadow: 0 0 40px rgba(255, 105, 120, .5);
   }
-  .cap { margin-top: 14px; color: var(--mute); font-size: .9rem; }
-  .cap a, footer a { color: var(--dim); }
-  .about p { color: var(--dim); text-align: left; }
-  .about p + p { margin-top: 14px; }
+  /* Треугольник рисуем, а не пишем символом: ▶ на iOS и части андроидов
+     подменяется цветным эмодзи, и заданный цвет игнорируется. */
+  .player .play span::before {
+    content: ""; width: 15px; height: 18px; background: var(--deep);
+    clip-path: polygon(0 0, 0 100%, 100% 50%);
+  }
+
+  .cap { margin-top: 20px; color: var(--mute); font-size: .9rem; }
+  /* Ссылка в тексте отличалась только цветом, а разница с окружающим
+     текстом была меньше 2:1 — подчёркиванием она видна всем. */
+  .cap a, footer a {
+    color: var(--dim); white-space: nowrap; text-decoration: underline;
+    text-decoration-thickness: 1px; text-underline-offset: 3px;
+    text-decoration-color: rgba(179, 164, 212, .45);
+  }
+  .cap a:hover, footer a:hover { text-decoration-color: currentColor; }
+
+  .about p { color: var(--dim); text-align: left; line-height: 1.78;
+             letter-spacing: .006em; max-width: 33em; margin-inline: auto;
+             text-wrap: pretty; }
+  .about p + p { margin-top: 22px; }
   .mail { margin: 0 auto; }
 
-  footer { margin-top: 56px; padding-bottom: 40px; font-size: .82rem;
-           color: var(--mute); line-height: 1.7; }
+  footer { margin-top: calc(var(--block) * 1.25); font-size: .82rem;
+           color: var(--mute); line-height: 1.7; position: relative;
+           padding-bottom: calc(48px + env(safe-area-inset-bottom)); }
+  @media (prefers-contrast: more) {
+    :root { --dim: #ded4f5; --mute: #c0b0e0;
+            --line: rgba(243, 238, 252, .6); }
+  }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
 <body>
   <main class="card">
     <div class="sun" aria-hidden="true"></div>
-    <h1>WellMusic · Lofi Beats</h1>
+    <h1><span class="brand">WellMusic</span><span class="kicker">Lofi&nbsp;Beats</span></h1>
     <p class="tag">Lofi beats to relax, study and sleep 🌙<br>
       AI-generated music, human-curated.</p>
 
     <nav class="links">
-      <a id="tt-link" href="#" rel="noopener">TikTok — @wellmusic.lofi</a>
-      <a id="yt-link" href="#" rel="noopener">YouTube — WellMusic · Lofi Beats</a>
+      <a id="tt-link" href="#" target="_blank" rel="noopener">TikTok — @wellmusic.lofi</a>
+      <a id="yt-link" href="#" target="_blank" rel="noopener">YouTube — WellMusic · Lofi Beats</a>
     </nav>
 
     <section>
       <h2>Latest mixes</h2>
       <div class="mixes" id="mixes"></div>
       <p class="cap">Hour-long mixes with timestamped tracklists —
-        <a id="all-mixes" href="#" rel="noopener">all of them on YouTube</a>.</p>
+        <a id="all-mixes" href="#" target="_blank" rel="noopener"
+           aria-label="All mixes on YouTube">on YouTube</a>.</p>
     </section>
 
     <section class="about">
@@ -200,14 +280,21 @@ function seriesCard(pl) {
   box.className = "player " + pl.look;
   box.setAttribute("aria-label", "Play " + pl.title);
   box.innerHTML =
-    `<span class="play" aria-hidden="true"><span>▶</span></span>` +
+    `<span class="play" aria-hidden="true"><span></span></span>` +
     `<span class="series">${pl.title}</span>`;
   box.addEventListener("click", () => {
-    box.outerHTML =
-      `<div class="player"><iframe title="${pl.title}" ` +
+    // Меняем узел, а не outerHTML: строка выбросила бы из DOM саму кнопку
+    // вместе с фокусом, и у клавиатуры терялось место на странице.
+    const frame = document.createElement("div");
+    frame.className = "player";
+    frame.tabIndex = -1;
+    frame.innerHTML =
+      `<iframe title="${pl.title}" ` +
       `src="https://www.youtube-nocookie.com/embed/videoseries?list=${pl.id}&autoplay=1" ` +
       `allow="accelerometer; autoplay; encrypted-media; picture-in-picture" ` +
-      `allowfullscreen loading="lazy"></iframe></div>`;
+      `allowfullscreen loading="lazy"></iframe>`;
+    box.replaceWith(frame);
+    frame.focus();
   }, { once: true });
   return box;
 }
